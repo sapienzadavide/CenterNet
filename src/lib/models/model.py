@@ -12,6 +12,7 @@ from .networks.dlav0 import get_pose_net as get_dlav0
 from .networks.pose_dla_dcn import get_pose_net as get_dla_dcn
 from .networks.resnet_dcn import get_pose_net as get_pose_net_dcn
 from .networks.large_hourglass import get_large_hourglass_net
+from .exporter import *
 
 _model_factory = {
   'res': get_pose_net, # default Resnet with deconv
@@ -78,6 +79,15 @@ def load_model(model, model_path, optimizer=None, resume=False,
       print('Resumed optimizer with start lr', start_lr)
     else:
       print('No optimizer parameters in checkpoint.')
+  
+  # load an example image and load it on model
+  model, input_batch = load_ex_image(model)
+  model.eval()
+  with torch.no_grad():
+        output = model(input_batch)
+  # export weights and debugs
+  weights_outputs_exporter(model, input_batch)
+
   if optimizer is not None:
     return model, optimizer, start_epoch
   else:

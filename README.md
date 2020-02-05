@@ -6,9 +6,9 @@ Object detection, 3D detection, and pose estimation using center point detection
 > *arXiv technical report ([arXiv 1904.07850](http://arxiv.org/abs/1904.07850))*         
 
 
-Contact: [zhouxy@cs.utexas.edu](mailto:zhouxy@cs.utexas.edu). Any questions or discussions are welcomed! 
+Contact: [zhouxy@cs.utexas.edu](mailto:zhouxy@cs.utexas.edu). Any questions or discussions are welcomed!
 
-## Abstract 
+## Abstract
 
 Detection identifies objects as axis-aligned boxes in an image. Most successful object detectors enumerate a nearly exhaustive list of potential object locations and classify each. This is wasteful, inefficient, and requires additional post-processing. In this paper, we take a different approach. We model an object as a single point -- the center point of its bounding box. Our detector uses keypoint estimation to find center points and regresses to all other object properties, such as size, 3D location, orientation, and even pose. Our center point based approach, CenterNet, is end-to-end differentiable, simpler, faster, and more accurate than corresponding bounding box based detectors. CenterNet achieves the best speed-accuracy trade-off on the MS COCO dataset, with 28.1% AP at 142 FPS, 37.4% AP at 52 FPS, and 45.1% AP with multi-scale testing at 1.4 FPS. We use the same approach to estimate 3D bounding box in the KITTI benchmark and human pose on the COCO keypoint dataset. Our method performs competitively with sophisticated multi-stage methods and runs in real-time.
 
@@ -44,7 +44,7 @@ Detection identifies objects as axis-aligned boxes in an image. Most successful 
 
 ### 3D bounding box detection on KITTI validation
 
-|Backbone|FPS|AP-E|AP-M|AP-H|AOS-E|AOS-M|AOS-H|BEV-E|BEV-M|BEV-H| 
+|Backbone|FPS|AP-E|AP-M|AP-H|AOS-E|AOS-M|AOS-H|BEV-E|BEV-M|BEV-H|
 |--------|---|----|----|----|-----|-----|-----|-----|-----|-----|
 |DLA-34  |32 |96.9|87.8|79.2|93.9 |84.3 |75.7 |34.0 |30.5 |26.8 |
 
@@ -57,10 +57,10 @@ Please refer to [INSTALL.md](readme/INSTALL.md) for installation instructions.
 
 ## Use CenterNet
 
-We support demo for image/ image folder, video, and webcam. 
+We support demo for image/ image folder, video, and webcam.
 
-First, download the models (By default, [ctdet_coco_dla_2x](https://drive.google.com/open?id=1pl_-ael8wERdUREEnaIfqOV_VF2bEVRT) for detection and 
-[multi_pose_dla_3x](https://drive.google.com/open?id=1PO1Ax_GDtjiemEmDVD7oPWwqQkUu28PI) for human pose estimation) 
+First, download the models (By default, [ctdet_coco_dla_2x](https://drive.google.com/open?id=1pl_-ael8wERdUREEnaIfqOV_VF2bEVRT) for detection and
+[multi_pose_dla_3x](https://drive.google.com/open?id=1PO1Ax_GDtjiemEmDVD7oPWwqQkUu28PI) for human pose estimation)
 from the [Model zoo](readme/MODEL_ZOO.md) and put them in `CenterNet_ROOT/models/`.
 
 For object detection on images/ video, run:
@@ -90,7 +90,7 @@ The result for the example images should look like:
 You can add `--debug 2` to visualize the heatmap outputs.
 You can add `--flip_test` for flip test.
 
-To use this CenterNet in your own project, you can 
+To use this CenterNet in your own project, you can
 
 ~~~
 import sys
@@ -109,6 +109,22 @@ img = image/or/path/to/your/image/
 ret = detector.run(img)['results']
 ~~~
 `ret` will be a python dict: `{category_id : [[x1, y1, x2, y2, score], ...], }`
+
+## Binaries exporter for weights and outputs
+
+You can export the weights and outputs for each layer of the network. The file format is that used in [tkDNN](https://github.com/ceccocats/tkDNN/).
+
+You can run:
+
+### resdcn_101
+~~~
+python demo.py --input_res 224 --arch resdcn_101 ctdet --demo /path/to/image/or/folder/or/video/or/webcam --load_model ../models/ctdet_coco_resdcn101.pth
+~~~
+
+### dla_34
+~~~
+python demo.py --input_res 224 --arch dla_34 ctdet --demo /path/to/image/or/folder/or/video/or/webcam --load_model ../models/ctdet_coco_dla_2x.pth
+~~~
 
 ## Benchmark Evaluation and Training
 
