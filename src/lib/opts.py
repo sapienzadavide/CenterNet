@@ -224,6 +224,14 @@ class opts(object):
     self.parser.add_argument('--eval_oracle_dep', action='store_true', 
                              help='use ground truth depth.')
 
+    # exporter
+    self.parser.add_argument('--exp_wo', action='store_true', 
+                             help='export weights and outputs.')
+    self.parser.add_argument('--exp_wo_dim', type=int, default=512, 
+                             help='set the input image dimension to export weights and outputs.')
+    self.parser.add_argument('--exp_det', action='store_true', 
+                             help='export detections.')
+
   def parse(self, args=''):
     if args == '':
       opt = self.parser.parse_args()

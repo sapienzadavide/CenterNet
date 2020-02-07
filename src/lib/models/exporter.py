@@ -15,11 +15,11 @@ import struct
 
 from opts import opts
 
-def create_folders(arch):
-    if not os.path.exists('debug_'+arch):
-        os.makedirs('debug_'+arch)
-    if not os.path.exists('layers_'+arch):
-        os.makedirs('layers_'+arch)
+def create_folders(path_debug, path_layers):
+    if not os.path.exists(path_debug):
+        os.makedirs(path_debug)
+    if not os.path.exists(path_layers):
+        os.makedirs(path_layers)
 
 def bin_write(f, data):
     data = data.flatten()
@@ -30,7 +30,7 @@ def bin_write(f, data):
 def hook(module, input, output):
     setattr(module, "_value_hook", output)
 
-def load_ex_image(model):
+def load_ex_image(model, exp_wo_dim):
     # Download an example image from the pytorch website
     url, filename = (
         "https://github.com/pytorch/hub/raw/master/dog.jpg", "dog.jpg")
@@ -43,8 +43,8 @@ def load_ex_image(model):
     input_image = Image.open(filename)
     print("input_image: ",input_image.size)
     preprocess = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
+        transforms.Resize(exp_wo_dim),
+        transforms.CenterCrop(exp_wo_dim),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
                              0.229, 0.224, 0.225]),
@@ -61,7 +61,7 @@ def load_ex_image(model):
     
     return model, input_batch
 
-def save_debug(layer, t, arch):
+def save_debug(layer, t, path_debug):
     # Save the output of the layer
     try:
         output = layer._value_hook
@@ -81,22 +81,22 @@ def save_debug(layer, t, arch):
         except:
             return
     o = np.array(o, dtype=np.float32)
-    o.tofile("debug_"+arch+"/" + t + ".bin", format="f")
+    o.tofile(path_debug+"/" + t + ".bin", format="f")
     print("debug  ",o.shape)
 
-def exp_input(model, input_batch, arch):
+def exp_input(model, input_batch, path_debug):
     # Export the input batch 
     model(input_batch)
     i = input_batch.cpu().data.numpy()
     i = np.array(i, dtype=np.float32)
-    i.tofile("debug_"+arch+"/input.bin", format="f")
+    i.tofile(path_debug+"/input.bin", format="f")
     print("input: ", i.shape)
     
 
-def exp_wb_output(model, arch):
+def exp_wb_output(model, path_debug, path_layers):
     raise NotImplementedError("EXPORTER NOT IMPLEMENTED YET")
 
-def exp_wb_output_resdcn(model, arch):
+def exp_wb_output_resdcn(model, path_debug, path_layers):
     f = None
     flag = False
     for n, m in model.named_modules():    
@@ -110,7 +110,7 @@ def exp_wb_output_resdcn(model, arch):
                 b = m._parameters['bias'].data.cpu().numpy()
                 print("    DCN bias shape:", np.shape(b))
             t = '-'.join(n.split('.'))    
-            file_name = "layers_"+arch+"/" + t + ".bin"
+            file_name = path_layers+"/" + t + ".bin"
             print("open file f1: ", file_name)
             f1 = open(file_name, mode='wb')
         
@@ -124,7 +124,7 @@ def exp_wb_output_resdcn(model, arch):
         o = np.array(o, dtype=np.float32)
 
         t = '-'.join(n.split('.'))    
-        o.tofile("debug_"+arch+"/" + t + ".bin", format="f")
+        o.tofile(path_debug+"/" + t + ".bin", format="f")
         print('------- ', n, ' ------') 
         print("debug  ",o.shape)
         
@@ -132,7 +132,7 @@ def exp_wb_output_resdcn(model, arch):
             continue
 
         if ' of Conv2d' in str(m.type) or ' of ConvTranspose2d' in str(m.type) or ' of Linear' in str(m.type):
-            file_name = "layers_"+arch+"/" + t + ".bin"
+            file_name = path_layers+"/" + t + ".bin"
             print("open file f: ", file_name)
             f = open(file_name, mode='wb')
         
@@ -216,7 +216,7 @@ def exp_wb_output_resdcn(model, arch):
                 print("close file")
                 f = None
 
-def exp_wb_output_dla(model, arch):
+def exp_wb_output_dla(model, path_debug, path_layers):
     f = None
     flag = False
     d2write = {}
@@ -236,14 +236,14 @@ def exp_wb_output_dla(model, arch):
             continue
             
         t = '-'.join(n.split('.')) 
-        save_debug(m, t, arch)  
+        save_debug(m, t, path_debug)  
         print(m.type, "##################")
 
         if (' of DCN' in str(m.type) or ' of Conv2d' in str(m.type) or ' of ConvTranspose2d' in str(m.type) or ' of Linear' in str(m.type) or ' of BatchNorm2d' in str(m.type)):
             
             if (' of ConvTranspose2d' in str(m.type)) or (flag and ' of Conv2d' in str(m.type)):
                 print("open file f1: ", "layers_"+arch+"/" + t + ".bin")
-                f1 = open("layers_"+arch+"/" + t + ".bin", mode='wb')
+                f1 = open(path_layers+"/" + t + ".bin", mode='wb')
                 w1 = m._parameters['weight'].data.cpu().numpy()
                 w1 = np.array(w1, dtype=np.float32)
                 # if (' of ConvTranspose2d' in str(m.type)):
@@ -268,7 +268,7 @@ def exp_wb_output_dla(model, arch):
                 if d2write['name'] is not None:
                     print("Error: no name in dictionary")
                     return
-                d2write['name'] = "layers_"+arch+"/" + t + ".bin"
+                d2write['name'] = path_layers+"/" + t + ".bin"
 
             if ' of DCN' in str(m.type):
                 d2write['dcn'] = True
@@ -334,7 +334,7 @@ _exporter_factory = {
   'hourglass': exp_wb_output,
 }
 
-def weights_outputs_exporter(model, input_batch):
+def weights_outputs_exporter(model, input_batch, exp_wo_dim):
     opt = opts().init()
     arch = opt.arch
     print(arch)
@@ -342,19 +342,21 @@ def weights_outputs_exporter(model, input_batch):
     
     get_exporter = _exporter_factory[arch]
     
+    path_debug = 'debug_'+arch+'_'+str(exp_wo_dim)
+    path_layers = 'layers_'+arch+'_'+str(exp_wo_dim)
     # create folders debug and layers if do not exist
-    create_folders(arch)
+    create_folders(path_debug, path_layers)
 
     # add output attribute to the layers
     for n, m in model.named_modules():
         m.register_forward_hook(hook)
 
     # export input bin
-    exp_input(model, input_batch, arch)
+    exp_input(model, input_batch, path_debug)
     
     # export weight and output bin
     try:
-        get_exporter(model, arch)
+        get_exporter(model, path_debug, path_layers)
     except NotImplementedError as e:
         print(str(e))
         

@@ -118,12 +118,23 @@ You can run:
 
 ### resdcn_101
 ~~~
-python demo.py --input_res 224 --arch resdcn_101 ctdet --demo /path/to/image/or/folder/or/video/or/webcam --load_model ../models/ctdet_coco_resdcn101.pth
+python demo.py --input_res 512 --arch resdcn_101 ctdet --demo /path/to/image/or/folder/or/video/or/webcam --load_model ../models/ctdet_coco_resdcn101.pth --exp_wo --exp_wo_dim 512
 ~~~
 
 ### dla_34
 ~~~
-python demo.py --input_res 224 --arch dla_34 ctdet --demo /path/to/image/or/folder/or/video/or/webcam --load_model ../models/ctdet_coco_dla_2x.pth
+python demo.py --input_res 512 --arch dla_34 ctdet --demo /path/to/image/or/folder/or/video/or/webcam --load_model ../models/ctdet_coco_dla_2x.pth --exp_wo --exp_wo_dim 512
+~~~
+
+## Detection exporter
+
+You can export the detection information for a given validation folder. The file format is that used in the mAP of [tkDNN](https://github.com/ceccocats/tkDNN/).
+
+You can run:
+
+### dla_34
+~~~
+python demo.py --input_res 512 --arch dla_34 ctdet --demo /path/to/validation/folder --load_model ../models/ctdet_coco_dla_2x.pth --exp_det
 ~~~
 
 ## Benchmark Evaluation and Training

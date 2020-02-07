@@ -14,6 +14,8 @@ from .networks.resnet_dcn import get_pose_net as get_pose_net_dcn
 from .networks.large_hourglass import get_large_hourglass_net
 from .exporter import *
 
+from opts import opts
+
 _model_factory = {
   'res': get_pose_net, # default Resnet with deconv
   'dlav0': get_dlav0, # default DLAup
@@ -31,6 +33,7 @@ def create_model(arch, heads, head_conv):
 
 def load_model(model, model_path, optimizer=None, resume=False, 
                lr=None, lr_step=None):
+  opt = opts().init()
   start_epoch = 0
   checkpoint = torch.load(model_path, map_location=lambda storage, loc: storage)
   print('loaded {}, epoch {}'.format(model_path, checkpoint['epoch']))
@@ -80,13 +83,14 @@ def load_model(model, model_path, optimizer=None, resume=False,
     else:
       print('No optimizer parameters in checkpoint.')
   
-  # load an example image and load it on model
-  model, input_batch = load_ex_image(model)
-  model.eval()
-  with torch.no_grad():
-        output = model(input_batch)
-  # export weights and debugs
-  weights_outputs_exporter(model, input_batch)
+  if(opt.exp_wo):
+    # load an example image and load it on model
+    model, input_batch = load_ex_image(model, opt.exp_wo_dim)
+    model.eval()
+    with torch.no_grad():
+          output = model(input_batch)
+    # export weights and debugs
+    weights_outputs_exporter(model, input_batch, opt.exp_wo_dim)
 
   if optimizer is not None:
     return model, optimizer, start_epoch
