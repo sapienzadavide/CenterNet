@@ -242,7 +242,7 @@ def exp_wb_output_dla(model, path_debug, path_layers):
         if (' of DCN' in str(m.type) or ' of Conv2d' in str(m.type) or ' of ConvTranspose2d' in str(m.type) or ' of Linear' in str(m.type) or ' of BatchNorm2d' in str(m.type)):
             
             if (' of ConvTranspose2d' in str(m.type)) or (flag and ' of Conv2d' in str(m.type)):
-                print("open file f1: ", "layers_"+arch+"/" + t + ".bin")
+                print("open file f1: ", path_layers+"/" + t + ".bin")
                 f1 = open(path_layers+"/" + t + ".bin", mode='wb')
                 w1 = m._parameters['weight'].data.cpu().numpy()
                 w1 = np.array(w1, dtype=np.float32)
